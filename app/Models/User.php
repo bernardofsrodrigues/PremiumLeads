@@ -12,6 +12,18 @@ class User extends Authenticatable
 {
     use HasApiTokens,HasFactory, Notifiable;
 
+
+    /**
+     * Função estática para obter os dados do usuário pelo ID.
+     *
+     * @param int $id
+     * @return User|null
+     */
+    public static function getUser($id)
+    {
+        return self::find($id);
+    }
+
     /**
      * The attributes that are mass assignable.
      *

@@ -137,6 +137,22 @@ class ApiController extends Controller
         }
     }
 
+    public function me(Request $request) {
+        $token = $request->bearerToken(); 
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $personalAccessToken = PersonalAccessToken::findToken($token);
+
+        if (!$personalAccessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $usuario = User::getUser($personalAccessToken->id);
+        return response()->json($usuario);
+    }
+
     public function alterar_perfil(Request $request){
 
         $token = $request->bearerToken(); 

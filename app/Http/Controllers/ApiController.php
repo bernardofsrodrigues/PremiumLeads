@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bancos;
+use App\Models\Logs_atividades;
 use App\Models\Rules;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Contracts\Service\Attribute\Required;
 
 class ApiController extends Controller
 {
@@ -26,7 +28,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -112,11 +114,21 @@ class ApiController extends Controller
                 ], 401);
             }
 
+            if ($user->active != true){
+                return response()->json([
+                    "message" => "Usuário desabilitado ou bloqueado."
+                ], 401);
+            }
+
             // Remove todos os tokens existentes do usuário
             $user->tokens()->delete();
 
             // Cria um novo token para o dispositivo fornecido
             $token = $user->createToken($validatedData['device'])->plainTextToken;
+
+            $user->updated_at = now();
+
+            $user->save();
 
             // Prepara os dados do usuário para a resposta
             $camposUser = $user->only(['name', 'email', 'tipo']);
@@ -149,7 +161,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
         return response()->json($usuario);
     }
 
@@ -166,7 +178,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             $request->merge(['user_id' => $usuario->id]);
@@ -228,7 +240,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -292,7 +304,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             $request->merge(['user_id' => $usuario->id]);
@@ -350,18 +362,19 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $rules = [
-            'nome' => 'required',
+            'nome' => 'required|unique:Bancos',
         ];
 
         $messages = [
-            'nome' => 'O campo nome é obrigatório.',
+            'nome.required' => 'O campo nome é obrigatório.',
+            'nome.unique' => 'Esse banco já foi criado.',
         ];
 
         try {
@@ -369,8 +382,17 @@ class ApiController extends Controller
 
             Bancos::create($request->all());
 
+            Logs_atividades::CreatedLog($usuario->id,200,"Banco criado com sucesso");
+
             return response()->json(["message" => "Banco criado com sucesso"], 200);
         } catch (ValidationException $e) {
+
+            $errorsString = implode('; ', array_map(function ($error) {
+                return implode(', ', $error);
+            }, $e->errors()));
+
+            Logs_atividades::CreatedLog($usuario->id,400,$errorsString);
+
             return response()->json([
                 "message" => "Erro de validação",
                 "errors" => $e->errors()
@@ -391,7 +413,7 @@ class ApiController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $usuario = User::getUser($personalAccessToken->id);
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
 
         if($usuario->tipo != "admin"){
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -404,6 +426,66 @@ class ApiController extends Controller
         }
     }
 
+    public function create_log(Request $request){
+        $token = $request->bearerToken(); 
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
+        $personalAccessToken = PersonalAccessToken::findToken($token);
+
+        if (!$personalAccessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
+
+        $rules = [
+            'status' => 'required|integer',
+            'message' => 'required|string',
+        ];
+
+        $messages = [
+            'status.required' => 'O campo status é obrigatório.',
+            'status.integer' => 'O campo status deve ser inteiro.',
+            'message.required' => 'O campo message é obrigatório.',
+            'message.string' => 'O campo status deve ser texto.',
+        ];
+
+        try {
+            $request->validate($rules, $messages);
+
+            return Logs_atividades::CreatedLog($usuario->id,$request->status,$request->message);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                "message" => "Erro de validação",
+                "errors" => $e->errors()
+            ], 400);
+        }
+
+    }
+
+    public function logs(Request $request){
+
+        $token = $request->bearerToken(); 
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $personalAccessToken = PersonalAccessToken::findToken($token);
+
+        if (!$personalAccessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
+
+        $logs = Logs_atividades::where('user_id',$usuario->id)->get();
+
+        if($logs){
+            return response()->json(["data"=>$logs],200);
+        }
+    }
 
 }

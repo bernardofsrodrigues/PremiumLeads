@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bancos;
+use App\Models\Campanhas;
 use App\Models\Logs_atividades;
 use App\Models\Rules;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
-use Symfony\Contracts\Service\Attribute\Required;
+use League\Csv\Reader;
+use League\Csv\Statement;
+use Illuminate\Support\Facades\Storage;
 
 class ApiController extends Controller
 {
@@ -40,6 +43,7 @@ class ApiController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users'],
             'password' => ['required'],
+            'repassword'=>['required'],
             'type' => ['required']
         ];
 
@@ -55,12 +59,19 @@ class ApiController extends Controller
             'email.max' => 'O campo email deve ter no máximo 255 caracteres.',
             'email.unique' => 'O email fornecido já está em uso.',
             'password.required' => 'O campo senha é obrigatório.',
+            'repassword.required' => 'O campo repitir senha é obrigatório.',
             'type.required' => 'O campo tipo é obrigatório.',
         ];
 
         try {
             // Valida os dados da requisição
             $validatedData = $request->validate($rules, $messages);
+
+            if ($validatedData['password'] != $validatedData['repassword']){
+                return response()->json([
+                    "message" => "As senhas não são iguais.",
+                ], 400);
+            }
 
             // Cria o novo usuário
             $user = new User;
@@ -188,6 +199,8 @@ class ApiController extends Controller
             'user_id' => 'required|exists:users,id',
             'email' => 'required|email|min:5',
             'nome' => 'required|string|min:4',
+            'ativo' => 'required|boolean',
+
         ];
 
         $messages = [
@@ -199,6 +212,9 @@ class ApiController extends Controller
             'nome.required' => 'O campo nome é obrigatório.',
             'nome.string' => ' O campo deve ser uma string.',
             'nome.min' => ' O campo deve ter mais de 4 caracter.',
+            'ativo.required' => 'O campo ativo é obrigatório.',
+            'ativo.boolean' => 'O campo deve ser uma boolean.',
+
         ];
 
         try {
@@ -207,9 +223,15 @@ class ApiController extends Controller
 
             $user = User::where('id',$validatedData['user_id'])->first();
 
+            if (!$validatedData['ativo']){
+                $user->tokens()->delete();
+            }
+
             if($user){
                 $user->email = $validatedData['email'];
                 $user->name = $validatedData['nome'];
+                $user->active = $validatedData['ativo'];
+                $user->updated_at = now();
 
                 $user->save();
 
@@ -426,6 +448,32 @@ class ApiController extends Controller
         }
     }
 
+    public function users(Request $request){
+
+        $token = $request->bearerToken(); 
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $personalAccessToken = PersonalAccessToken::findToken($token);
+
+        if (!$personalAccessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
+
+        if($usuario->tipo != "admin"){
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $users = User::get();
+
+        if($users){
+            return response()->json(["usuarios"=>$users],200);
+        }
+    }
+
     public function create_log(Request $request){
         $token = $request->bearerToken(); 
         if (!$token) {
@@ -486,6 +534,129 @@ class ApiController extends Controller
         if($logs){
             return response()->json(["data"=>$logs],200);
         }
+    }
+
+    private function getMissingHeaders(array $header, array $expectedHeader): array
+    {
+        return array_diff($expectedHeader, $header);
+    }
+
+    private function importCsvToTemporaryTable(string $filePath,string $cod_tabela)
+    {
+        try {
+            $path = str_replace('\\', '/', $filePath);
+            DB::statement("CREATE TABLE IF NOT EXISTS dbtemp_$cod_tabela (
+                cpf VARCHAR(20),
+                nasc VARCHAR(30),
+                nome VARCHAR(255),
+                telefone VARCHAR(30),
+                var1 VARCHAR(50),
+                var2 VARCHAR(50),
+                var3 VARCHAR(50),
+                saldo VARCHAR(30),
+                saldo_lib VARCHAR(30),
+                sit INT,
+                fila INT,
+                detalhes VARCHAR(255),
+                dt_consulta VARCHAR(30),
+                INDEX index_sit (sit)
+            )");
+            
+            DB::statement("LOAD DATA LOCAL INFILE '$path' INTO TABLE dbtemp_$cod_tabela FIELDS TERMINATED BY ';' LINES TERMINATED BY '\n' IGNORE 1 LINES(cpf, nasc, nome, telefone,var1,var2,var3)");
+            
+            $count = DB::table('dbtemp_'.$cod_tabela)->count();
+
+            return $count;
+            
+        } catch (\Exception $e) {
+            // Captura e retorna a mensagem de erro
+            return $e->getMessage();
+        }
+    }
+
+    public function create_campanha(Request $request){
+        
+        $token = $request->bearerToken(); 
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $personalAccessToken = PersonalAccessToken::findToken($token);
+
+        if (!$personalAccessToken) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $usuario = User::getUser($personalAccessToken->tokenable_id);
+
+        $rules = [
+            'nome' => 'required',
+            'banco_id' => 'required|exists:bancos,id',
+            'arquivo' => 'required|file|mimes:csv,txt|max:40960'
+        ];
+
+        $messages = [
+            'nome.required' => 'O campo nome é obrigatório.',
+            'banco_id.required' => 'O campo banco é obrigatório.',
+            'banco_id.exists' => 'O Banco informado não existe.',
+            'arquivo.required' => 'O campo arquivo é obrigatório.',
+            'arquivo.file' => 'O campo arquivo deve ser enviado um arquivo csv,txt.',
+            'arquivo.mimes' => 'Suporte apenas para .csv e .txt .',
+            'arquivo.max' => 'Tamanho maximo do arquivo deve ser 40 MB.',
+        ];
+        $cod_tabela = now()->format('dmYHis');
+        try {
+            $request->validate($rules, $messages);
+
+            $file = $request->file('arquivo');
+            $path = $file->storeAs('csv', $cod_tabela.'.csv', 'local');
+            $fullPath = storage_path('app/' . $path);
+
+            $csv = Reader::createFromPath($fullPath, 'r');
+            $csv->setDelimiter(';');
+            $csv->setHeaderOffset(0);
+
+            $header = $csv->getHeader();
+
+            $expectedHeader = ['cpf', 'nasc', 'nome','telefone','var1','var2','var3'];
+            $missingHeaders = $this->getMissingHeaders($header, $expectedHeader);
+
+            if (!empty($missingHeaders)) {
+                Logs_atividades::CreatedLog($usuario->id,500,'Cabeçalho do CSV invalido. Não localizado: ' . implode(', ', $missingHeaders));
+                return response()->json(['error' => 'Cabeçalho do CSV invalido. Não localizado: ' . implode(', ', $missingHeaders)]);
+            }
+
+            $result = $this->importCsvToTemporaryTable($fullPath,$cod_tabela);
+
+            if (is_numeric($result)) {
+
+                $campanha = new Campanhas;
+
+                $campanha->banco_id = $request->banco_id;
+                $campanha->user_id = $usuario->id;
+                $campanha->nome = $request->nome;
+                $campanha->uuid_tabela = $cod_tabela;
+                $campanha->registros = $result;
+
+                $campanha->save();
+
+                return response()->json(["status"=>200,"message"=>"Campanha criada com sucesso"],200);
+                Logs_atividades::CreatedLog($usuario->id,200,"Nova campanha `$request->nome` criada com sucesso.");
+                Logs_atividades::CreatedLog($usuario->id,200,"$result clientes adicionado na campanha `$request->nome`");
+            } else {
+                return response()->json(["status"=>400,"message"=>$result],400);
+                Logs_atividades::CreatedLog($usuario->id,400,"Não foi possivel criar sua campanha, Errors: $result");
+            }
+
+        } catch (ValidationException $e) {
+
+            return response()->json([
+                "message" => "Erro de validação",
+                "errors" => $e->errors()
+            ], 400);
+        }
+
+
     }
 
 }

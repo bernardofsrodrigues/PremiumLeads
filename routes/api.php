@@ -9,8 +9,9 @@ Route::post('/login', [ApiController::class, 'login'])->name('login');
 
 // ROUTE USER
 
-Route::get('/user', [ApiController::class, 'me'])->name('user');
+Route::get('/me', [ApiController::class, 'me'])->name('user');
 Route::put('/user/update', [ApiController::class, 'alterar_perfil'])->name('user.update');
+Route::get('/users',[ApiController::class, 'users'])->name('users');
 
 // ROUTE RULES
 
@@ -26,6 +27,12 @@ Route::get('/bancos', [ApiController::class, 'bancos'])->name('bancos');
 
 Route::post('/logs', [ApiController::class, 'create_log'])->name('create.logs');
 Route::get('/logs', [ApiController::class, 'logs'])->name('logs');
+
+// ROUTE CAMPANHA
+
+Route::post('/create_campanha', [ApiController::class, 'create_campanha'])->name('create.campanha');
+
+
 
 
 

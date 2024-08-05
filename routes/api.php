@@ -3,9 +3,12 @@
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/login', function (){
+    return redirect(route('login.view'));
+});
 
-Route::post('/register', [ApiController::class, 'register'])->name('register');
 Route::post('/login', [ApiController::class, 'login'])->name('login');
+Route::post('/register', [ApiController::class, 'register'])->name('register');
 
 // ROUTE USER
 

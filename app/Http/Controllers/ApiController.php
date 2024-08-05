@@ -8,6 +8,7 @@ use App\Models\Logs_atividades;
 use App\Models\Rules;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -84,7 +85,8 @@ class ApiController extends Controller
             $user->save();
 
             // Retorna uma resposta de sucesso
-            return response()->json(["status" => 200, "message" => "Usuário criado com sucesso."], 200);
+            //return response()->json(["status" => 200, "message" => "Usuário criado com sucesso."], 200);
+            return redirect()->back()->with(['success' => 'Usuário criado com sucesso.']);
 
         } catch (ValidationException $e) {
             // Retorna uma resposta de erro de validação
@@ -120,15 +122,11 @@ class ApiController extends Controller
 
             // Verifica se o usuário existe e se a senha está correta
             if (!$user || !Hash::check($validatedData['password'], $user->password)) {
-                return response()->json([
-                    "message" => "Credenciais inválidas"
-                ], 401);
+                return redirect()->back()->withInput()->with('error', 'Credenciais inválidas.');
             }
 
             if ($user->active != true){
-                return response()->json([
-                    "message" => "Usuário desabilitado ou bloqueado."
-                ], 401);
+                return redirect()->back()->withInput()->with('error', 'Usuário desabilitado ou bloqueado.');
             }
 
             // Remove todos os tokens existentes do usuário
@@ -144,19 +142,16 @@ class ApiController extends Controller
             // Prepara os dados do usuário para a resposta
             $camposUser = $user->only(['name', 'email', 'tipo']);
 
-            // Retorna a resposta com o token e dados do usuário
-            return response()->json([
-                "token" => $token,
-                "type" => "Bearer",
-                "data" => ["usuario" => $camposUser]
-            ]);
+            if (Auth::attempt(['email' => $validatedData['email'], 'password' => $validatedData['password']])) {
+                return redirect(route('principal.view'));
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Credenciais inválidas.');;
+            }
+
+            return redirect(route('principal.view'));
 
         } catch (ValidationException $e) {
-            // Retorna uma resposta de erro de validação
-            return response()->json([
-                "message" => "Erro de validação",
-                "errors" => $e->errors()
-            ], 400);
+            return redirect()->back()->withErrors($e->validator)->withInput();
         }
     }
 
@@ -574,20 +569,8 @@ class ApiController extends Controller
         }
     }
 
-    public function create_campanha(Request $request){
-        
-        $token = $request->bearerToken(); 
-        if (!$token) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $personalAccessToken = PersonalAccessToken::findToken($token);
-
-        if (!$personalAccessToken) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $usuario = User::getUser($personalAccessToken->tokenable_id);
+    public function create_campanha(string $banco, string $produto, int $id, Request $request){
+        $bancos = Bancos::create($request->all());
 
         $rules = [
             'nome' => 'required',
@@ -605,8 +588,9 @@ class ApiController extends Controller
             'arquivo.max' => 'Tamanho maximo do arquivo deve ser 40 MB.',
         ];
         $cod_tabela = now()->format('dmYHis');
+        $usuario = Auth::user();
         try {
-            $request->validate($rules, $messages);
+            
 
             $file = $request->file('arquivo');
             $path = $file->storeAs('csv', $cod_tabela.'.csv', 'local');
@@ -632,12 +616,13 @@ class ApiController extends Controller
 
                 $campanha = new Campanhas;
 
-                $campanha->banco_id = $request->banco_id;
+                $campanha->banco_id = $id;
+
                 $campanha->user_id = $usuario->id;
                 $campanha->nome = $request->nome;
                 $campanha->uuid_tabela = $cod_tabela;
                 $campanha->registros = $result;
-
+                $request->validate($rules, $messages);
                 $campanha->save();
 
                 return response()->json(["status"=>200,"message"=>"Campanha criada com sucesso"],200);

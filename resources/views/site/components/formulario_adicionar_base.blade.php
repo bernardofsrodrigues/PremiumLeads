@@ -1,6 +1,7 @@
 <form action="{{ route('higienizacao.view.post', ['banco' => $banco, 'produto' => $produto, 'id' => $id]) }}" method="POST" enctype="multipart/form-data">
     @csrf
     <div class="modal-body py-10 px-lg-17">
+            <input type="hidden" value="{{ $id }}" name="banco_id" class="form-control form-control-lg" required />
         <div class="mb-3">
             <label for="nome" class="form-label fw-semibold">Nome da campanha</label>
             <input type="text" value="{{ old('nome') }}" id="nome" name="nome" class="form-control form-control-lg" placeholder="Insira o nome aqui" required />

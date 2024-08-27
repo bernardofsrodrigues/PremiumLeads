@@ -77,64 +77,16 @@
 												</div>
 												<!--end::Search-->
 											</div>
-											{{-- <!--begin::Card title-->
+
+											<!--begin::Card title-->
 											<!--begin::Card toolbar-->
 											<div class="card-toolbar">
 												<!--begin::Toolbar-->
 												<div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
-													<!--begin::Filter-->
-													<button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-													<i class="bi bi-funnel-fill fs-3">
-														<span class="path1"></span>
-														<span class="path2"></span>
-													</i>Filtrar</button>
-													<!--begin::Menu 1-->
-													<div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-														<!--begin::Header-->
-														<div class="px-7 py-5">
-															<div class="fs-5 text-dark fw-bold">Opções de filtro</div>
-														</div>
-														<!--end::Header-->
-														<!--begin::Separator-->
-														<div class="separator border-gray-200"></div>
-														<!--end::Separator-->
-														<!--begin::Content-->
-														<div class="px-7 py-5" data-kt-user-table-filter="form">
-															<!--begin::Input group-->
-															<div class="mb-10">
-																<label class="form-label fs-6 fw-semibold">Cargo:</label>
-																<select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Selecionar opção" data-allow-clear="true" data-kt-user-table-filter="role" data-hide-search="true">
-																	<option></option>
-																	<option value="Admin">Administrador</option>
-																	<option value="User">Usuário comum</option>
-																</select>
-															</div>
-															<!--end::Input group-->
-															<!--begin::Input group-->
-															<div class="mb-10">
-																<label class="form-label fs-6 fw-semibold">Situação:</label>
-																<select class="form-select form-select-solid fw-bold" data-kt-select2="true" data-placeholder="Selecionar opção" data-allow-clear="true" data-kt-user-table-filter="two-step" data-hide-search="true">
-																	<option></option>
-																	<option value="Enabled">Habilitado</option>
-																	<option value="Disabled">Desabilitado</option>
-																</select>
-															</div>
-															<!--end::Input group-->
-															<!--begin::Actions-->
-															<div class="d-flex justify-content-end">
-																<button type="reset" class="btn btn-light btn-active-light-primary fw-semibold me-2 px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="reset">Descartar</button>
-																<button type="submit" class="btn btn-primary fw-semibold px-6" data-kt-menu-dismiss="true" data-kt-user-table-filter="filter">Aplicar</button>
-															</div>
-															<!--end::Actions-->
-														</div>
-														<!--end::Content-->
-													</div>
-													<!--end::Menu 1-->
-													<!--end::Filter-->
-													<!--begin::Add user-->
-													<button action="{{route('controle_usuarios.view')}}" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_user">
-													<i class="bi bi-person-plus-fill fs-3"></i>Adicionar Usuários</button>
-													<!--end::Add user-->
+												<!--begin::Add user-->
+													<button action="{{route('controle_bancos.view')}}" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_user" style="height: 50%">
+													<i class="bi bi-bank2 fs-3"></i>  Adicionar Banco</button>
+												<!--end::Add user-->
 												</div>
 												<!--end::Toolbar-->
 												<!--begin::Group actions-->
@@ -231,11 +183,11 @@
 															<!--begin::Modal header-->
 															<div class="modal-header" id="kt_modal_add_user_header">
 																<!--begin::Modal title-->
-																<h2 class="fw-bold">Adicionar Usuário</h2>
+																<h2 class="fw-bold">Adicionar Banco</h2>
 																<!--end::Modal title-->
 																<!--begin::Close-->
 																<div class="btn btn-icon btn-sm btn-active-icon-primary" data-kt-users-modal-action="close">
-																	<i class="bi bi-person-plus-fill fs-3">
+																	<i class="bi bi-bank2 fs-3"></i>
 																		<span class="path1"></span>
 																		<span class="path2"></span>
 																	</i>
@@ -244,9 +196,9 @@
 															</div>
 															<!--end::Modal header-->
 															<!--begin::Modal body-->
-															<div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+															<div class="modal-body mx-5 mx-xl-15 my-7">
 															<!--begin::Form-->
-																@include('site.layouts.adicionar_usuarios')
+																@include('site.layouts.adicionar_bancos')
 															</div>
 															<!--end::Modal body-->
 														</div>
@@ -256,7 +208,7 @@
 												</div>
 												<!--end::Modal - Add task-->
 											</div>
-											<!--end::Card toolbar--> --}}
+											<!--end::Card toolbar-->
 										</div>
 										<!--end::Card header-->
 										<!--begin::Card body-->
@@ -277,10 +229,10 @@
 												</thead>
 												<tbody class="text-gray-600 fw-semibold">
 													@foreach ($bancos as $banco)
-														@if ($banco)
-															@php $class_situacao = "success"; $verbo_situacao = "Desabilitar";@endphp
+														@if ($banco->active == 1)
+															@php $situacao = "Habilidado"; $class_situacao = "success"; $verbo_situacao = "Desabilitar";@endphp
 														@else
-															@php $class_situacao = "danger"; $verbo_situacao = "Habilitar";@endphp
+															@php $situacao = "Desabilitado"; $class_situacao = "danger"; $verbo_situacao = "Habilitar";@endphp
 														@endif
 														<tr>
 														<td>
@@ -298,11 +250,14 @@
 															<!--end::Avatar-->
 															<!--begin::User details-->
 															<div class="d-flex flex-column">
-																<a href="#" class="text-gray-800 text-hover-primary mb-1">{{$banco->banco_id}}</a>
+																<a href="#" class="text-gray-800 text-hover-primary mb-1">{{$banco->nome}}</a>
 															</div>
 															<!--begin::User details-->
 														</td>
-															<td>{{$banco->created_at->format('d/m/Y H:i:s')}}</td>
+														<td>
+															<div class="badge badge-light-{{$class_situacao}} fw-bold">{{$situacao}}</div>
+														</td>
+														<td>{{$banco->created_at->format('d/m/Y H:i:s')}}</td>
 														<td class="text-end">
 															<a href="#" class="btn btn-light btn-active-light-primary btn-flex btn-center btn-sm" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Ações
 															<i class="bi bi-caret-down-fill ms-1"></i></a>
@@ -310,12 +265,7 @@
 															<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" data-kt-menu="true">
 																<!--begin::Menu item-->
 																<div class="menu-item px-3">
-																	<a href="#" class="menu-link px-3">Editar</a>
-																</div>
-																<!--end::Menu item-->
-																<!--begin::Menu item-->
-																<div class="menu-item px-3">
-																	<a href="{{route('alterar_situacao', $banco->banco_id)}}" class="menu-link px-3">{{$verbo_situacao}}</a>
+																	<a href="{{ route('controle_bancos.deletar', $banco->id) }}" class="menu-link px-3">{{ $verbo_situacao }}</a>
 																</div>
 																<!--end::Menu item-->
 															</div>

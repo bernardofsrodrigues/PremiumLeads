@@ -1,6 +1,6 @@
 @extends('site.layouts.basico')
 
-@section('title', 'Controle de bases')
+@section('title', 'Campanhas')
 
 @section('dashboard')
 					<!--begin::Main-->
@@ -26,7 +26,7 @@
 												</li>
 												<!--end::Item-->
 												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Controle de bases</li>
+												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Campanhas processando</li>
 												<!--end::Item-->
 												<!--begin::Item-->
 												<li class="breadcrumb-item">
@@ -34,20 +34,12 @@
 												</li>
 												<!--end::Item-->
 												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Bases</li>
-												<!--end::Item-->
-												<!--begin::Item-->
-												<li class="breadcrumb-item">
-													<i class="bi bi-chevron-double-right"></i>
-												</li>
-												<!--end::Item-->
-												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700">Lista de bases</li>
+												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Processamento</li>
 												<!--end::Item-->
 											</ul>
 											<!--end::Breadcrumb-->
 											<!--begin::Title-->
-											<h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bolder fs-1 lh-0">Controle de bases</h1>
+											<h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bolder fs-1 lh-0">Processamento</h1>
 											<!--end::Title-->
 										</div>
 										<!--end::Page title-->

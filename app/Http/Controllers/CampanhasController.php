@@ -17,7 +17,7 @@ class CampanhasController extends Controller
 
     public function adicionarCampanha(Request $request) {
         $bases = Campanhas::find($request->nome);
-    
+        
         return redirect()->back();
     }
 }

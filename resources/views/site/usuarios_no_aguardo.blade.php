@@ -1,6 +1,6 @@
 @extends('site.layouts.basico')
 
-@section('title', 'Controle de bases')
+@section('title', 'Campanhas')
 
 @section('dashboard')
 					<!--begin::Main-->
@@ -26,7 +26,7 @@
 												</li>
 												<!--end::Item-->
 												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Controle de bases</li>
+												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Campanhas processando</li>
 												<!--end::Item-->
 												<!--begin::Item-->
 												<li class="breadcrumb-item">
@@ -34,20 +34,12 @@
 												</li>
 												<!--end::Item-->
 												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Bases</li>
-												<!--end::Item-->
-												<!--begin::Item-->
-												<li class="breadcrumb-item">
-													<i class="bi bi-chevron-double-right"></i>
-												</li>
-												<!--end::Item-->
-												<!--begin::Item-->
-												<li class="breadcrumb-item text-gray-700">Lista de bases</li>
+												<li class="breadcrumb-item text-gray-700 fw-bold lh-1">Processamento</li>
 												<!--end::Item-->
 											</ul>
 											<!--end::Breadcrumb-->
 											<!--begin::Title-->
-											<h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bolder fs-1 lh-0">Controle de bases</h1>
+											<h1 class="page-heading d-flex flex-column justify-content-center text-dark fw-bolder fs-1 lh-0">Processamento</h1>
 											<!--end::Title-->
 										</div>
 										<!--end::Page title-->
@@ -129,11 +121,10 @@
 																<input class="form-check-input" type="checkbox" data-kt-check="true" data-kt-check-target="#kt_customers_table .form-check-input" value="1" />
 															</div>
 														</th>
+														<th class="min-w-125px">Usuário</th>
 														<th class="min-w-125px">Nome da base</th>
 														<th class="min-w-125px">Progresso da base</th>
 														<th class="min-w-125px">Status</th>
-														<th class="min-w-125px">Usuário</th>
-														<th class="min-w-125px">Data de envio</th>
 														<th class="text-end min-w-70px">Ações</th>
 													</tr>
 												</thead>
@@ -148,6 +139,7 @@
 																<input class="form-check-input" type="checkbox" value="1" />
 															</div>
 														</td>
+														<td>{{$campanha->user->name}}</td>
 														<td>
 															<a href="#" class="text-gray-800 text-hover-primary mb-1">{{$campanha->nome}}</a>
 														</td>
@@ -165,8 +157,6 @@
 															</div>
 															<!--end::Badges-->
 														</td>
-														<td>{{$campanha->user->name}}</td>
-														<td>{{$campanha->created_at->format('d/m/Y H:i:s')}}</td>
 														<td class="text-end">
 															<a href="#" class="btn btn-sm btn-light btn-flex btn-center btn-active-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Ações
 															<i class="bi bi-caret-down-fill ms-1"></i></a>
@@ -254,23 +244,6 @@
 																	</div>
 																	<!--end::Col-->
 																</div>
-																<!--end::Input group-->
-																<!--begin::Input group-->
-																<div class="d-flex flex-column mb-7 fv-row">
-																	<!--begin::Label-->
-																	<label class="fs-6 fw-semibold mb-2">
-																		<span class="required">Country</span>
-																		<span class="ms-1" data-bs-toggle="tooltip" title="Country of origination">
-																			<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
-																				<span class="path1"></span>
-																				<span class="path2"></span>
-																				<span class="path3"></span>
-																			</i>
-																		</span>
-																	</label>
-																	<!--end::Label-->
-																</div>
-																<!--end::Input group-->
 																<!--begin::Input group-->
 																<div class="fv-row mb-7">
 																	<!--begin::Wrapper-->

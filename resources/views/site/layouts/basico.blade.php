@@ -1024,6 +1024,136 @@
 									<!--end:Menu sub-->
 								</div>
 								<!--end:Menu item-->
+								{{-- <!--begin:Menu item-->
+								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+									<!--begin:Menu link-->
+									<span class="menu-link">
+										<span class="menu-icon">
+											<i class="bi bi-caret-down-fill">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Ajuda</span>
+										<span class="menu-arrow"></span>
+									</span>
+									<!--end:Menu link-->
+									<!--begin:Menu sub-->
+									<div class="menu-sub menu-sub-accordion">
+										
+										<!--begin:Menu item-->
+										<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+											<!--begin:Menu link-->
+											<span class="menu-link">
+												<span class="menu-bullet">
+													<span class="bullet bullet-dot"></span>
+												</span>
+												<span class="menu-title">Suporte</span>
+												<span class="menu-arrow"></span>
+											</span>
+											<!--end:Menu link-->
+											<!--begin:Menu sub-->
+											<div class="menu-sub menu-sub-accordion">
+												<!--begin:Menu item-->
+												<div data-kt-menu-trigger="click" class="menu-item menu-accordion mb-1">
+													<!--begin:Menu link-->
+													<span class="menu-link">
+														<span class="menu-bullet">
+															<span class="bullet bullet-dot"></span>
+														</span>
+														<span class="menu-title">Contato</span>
+														<span class="menu-arrow"></span>
+													</span>
+													<!--end:Menu link-->
+													<!--begin:Menu sub-->
+													<div class="menu-sub menu-sub-accordion">
+														<!--begin:Menu item-->
+														<div class="menu-item">
+															<!--begin:Menu link-->
+															<a class="menu-link" href="{{route('controle_bancos.view')}}">
+																<span class="menu-bullet">
+																	<span class="bullet bullet-dot"></span>
+																</span>
+																<span class="menu-title">Regras de banco</span>
+															</a>
+															<!--end:Menu link-->
+														</div>
+														<!--end:Menu item-->
+													</div>
+													<!--end:Menu sub-->
+												</div>
+												<!--end:Menu item-->
+												<!--begin:Menu item-->
+												<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+													<!--begin:Menu sub-->
+													<div class="menu-sub menu-sub-accordion">
+													</div>
+													<!--end:Menu sub-->
+												</div>
+												<!--end:Menu item-->
+											</div>
+											<!--end:Menu sub-->
+										</div>
+										<!--end:Menu item-->
+										<!--begin:Menu item-->
+										<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+											<!--begin:Menu link-->
+											<span class="menu-link">
+												<span class="menu-bullet">
+													<span class="bullet bullet-dot"></span>
+												</span>
+												<span class="menu-title">Controle de usuários</span>
+												<span class="menu-arrow"></span>
+											</span>
+											<!--end:Menu link-->
+											<!--begin:Menu sub-->
+											<div class="menu-sub menu-sub-accordion">
+												<!--begin:Menu item-->
+												<div data-kt-menu-trigger="click" class="menu-item menu-accordion mb-1">
+													<!--begin:Menu link-->
+													<span class="menu-link">
+														<span class="menu-bullet">
+															<span class="bullet bullet-dot"></span>
+														</span>
+														<span class="menu-title">Usuários</span>
+														<span class="menu-arrow"></span>
+													</span>
+													<!--end:Menu link-->
+													<!--begin:Menu sub-->
+													<div class="menu-sub menu-sub-accordion">
+														<!--begin:Menu item-->
+														<div class="menu-item">
+															<!--begin:Menu link-->
+															<a class="menu-link" href="{{route('controle_usuarios.view')}}">
+																<span class="menu-bullet">
+																	<span class="bullet bullet-dot"></span>
+																</span>
+																<span class="menu-title">Lista de usuários</span>
+															</a>
+															<!--end:Menu link-->
+														</div>
+														<!--end:Menu item-->
+													</div>
+													<!--end:Menu sub-->
+												</div>
+												<!--end:Menu item-->
+												<!--begin:Menu item-->
+												<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+													<!--begin:Menu sub-->
+													<div class="menu-sub menu-sub-accordion">
+													</div>
+													<!--end:Menu sub-->
+												</div>
+												<!--end:Menu item-->
+											</div>
+											<!--end:Menu sub-->
+										</div>
+										<!--end:Menu item-->
+									</div>
+									<!--end:Menu sub-->
+								</div>
+								<!--end:Menu item--> --}}
 							</div>
 							<!--end::Sidebar menu-->
 						</div>
@@ -1037,16 +1167,16 @@
 							<!--begin::Copyright-->
 							<div class="text-dark order-2 order-md-1">
 								<span class="text-muted fw-semibold me-1">2024&copy;</span>
-								<a href="" target="_blank" class="text-gray-800 text-hover-primary">Foco Interação</a>
+								<a href="/" class="text-gray-800 text-hover-primary">Foco Interação</a>
 							</div>
 							<!--end::Copyright-->
 							<!--begin::Menu-->
 							<ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
 								<li class="menu-item">
-									<a href="" target="_blank" class="menu-link px-2">Sobre</a>
+									<a href="{{ route('sobre.view') }}" class="menu-link px-2">Sobre</a>
 								</li>
 								<li class="menu-item">
-									<a href="" target="_blank" class="menu-link px-2">Suporte</a>
+									<a href="{{ route('suporte.view') }}" class="menu-link px-2">Suporte</a>
 								</li>
 							</ul>
 							<!--end::Menu-->

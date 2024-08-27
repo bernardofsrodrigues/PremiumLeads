@@ -39,6 +39,27 @@ Route::post('/create_campanha', [ApiController::class, 'create_campanha'])->name
 
 
 
+//rota para listar campanhas ativas, (get)  //auth com user->email
+Route::get('/campanhas',[ApiController::class, 'campanhas']);
+
+//rota que passa {cod_tabela} da campanha ativa (get) //retornar usuario com sit = 0 ou null
+Route::get('/campanha/{uuid_tabela}',[ApiController::class, 'status_campanha']);
+Route::get('/campanha/{tabela}/waiting',[ApiController::class, 'campanhas_pendente']);
+
+//rota de atualizar {cod_tabela, array_com_dados} (update)
+Route::put('/campanha/{tabela}/{cpf}',[ApiController::class, 'update_cliente_tabela']);
+
+
+//['cpf' => '123','saldo_fgts' => '123','saldo_liberado' => '123', 'situacao' => '123', 'log' => '']
+
+
+
+
+
+
+
+
+
 
 
 

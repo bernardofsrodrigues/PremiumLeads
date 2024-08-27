@@ -16,6 +16,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 use League\Csv\Reader;
 use League\Csv\Statement;
 use Illuminate\Support\Facades\Storage;
+use App\AcaosCampanhas;
 
 class ApiController extends Controller
 {
@@ -607,7 +608,7 @@ class ApiController extends Controller
 
             if (!empty($missingHeaders)) {
                 Logs_atividades::CreatedLog($usuario->id,500,'Cabeçalho do CSV invalido. Não localizado: ' . implode(', ', $missingHeaders));
-                return response()->json(['error' => 'Cabeçalho do CSV invalido. Não localizado: ' . implode(', ', $missingHeaders)]);
+                return response()->json(['error' => " Cabeçalho do CSV invalido. Não localizado: " . implode(', ', $missingHeaders)]);
             }
 
             $result = $this->importCsvToTemporaryTable($fullPath,$cod_tabela);
@@ -625,9 +626,10 @@ class ApiController extends Controller
                 $request->validate($rules, $messages);
                 $campanha->save();
 
-                return response()->json(["status"=>200,"message"=>"Campanha criada com sucesso"],200);
                 Logs_atividades::CreatedLog($usuario->id,200,"Nova campanha `$request->nome` criada com sucesso.");
                 Logs_atividades::CreatedLog($usuario->id,200,"$result clientes adicionado na campanha `$request->nome`");
+                
+                return redirect()->back()->with('status', 'Campanha criada com sucesso.');
             } else {
                 return response()->json(["status"=>400,"message"=>$result],400);
                 Logs_atividades::CreatedLog($usuario->id,400,"Não foi possivel criar sua campanha, Errors: $result");
@@ -642,6 +644,63 @@ class ApiController extends Controller
         }
 
 
+    }
+
+
+    
+    public function campanhas(Request $request){
+        $campanhas = Campanha::where('id_usuario',$request->user)->where('banco',$request->banco)->where('sit_campanha',1)->get();
+        if($campanhas->isNotEmpty()){
+            return response()->json($campanhas, 200);
+        }else{
+            return response()->json(['message' => 'Nenhuma campanha foi localizada'], 400);
+        }
+    }
+    
+    public function status_campanha(Request $request){
+        $campanhas = Campanha::where('uuid_tabela',$request->uuid_tabela)->first();
+        if ($campanhas) {
+            $campanhas->sit_campanha = $request->sit;
+            $campanhas->updated_at = now();
+            $campanhas->save();
+    
+            return response()->json(['message' => 'Campanha atualizada com sucesso'], 200);
+        } else {
+            return response()->json(['message' => 'Campanha não foi localizada'], 400);
+        }
+    }
+    
+    public function campanhas_pendente(Request $request){
+        $results = DB::table($request->tabela)
+        ->select('cpf', 'nasc')
+        ->whereNull('sit')
+        ->inRandomOrder() // Ordenação aleatória
+        ->first();
+        if($results){
+            return response()->json($results, 200);
+        } else {
+            return response()->json(['message' => 'Nenhum registro localizado'], 400);
+        };
+        
+    }
+    
+    public function update_cliente_tabela(Request $request){
+        $updated = DB::table($request->tabela)->where('cpf', $request->cpf)->update([
+            'nome' => $request->nome,
+            'telefone' => $request->telefone,
+            'saldo' => $request->saldo,
+            'saldo_lib' => $request->saldo_lib,
+            'sit' => $request->sit,
+            'detalhes' => $request->log,
+            'dt_consulta' => $request->dt,
+        ]);
+        if ($updated) {
+            $acaoCampanhas = new AcaosCampanhas();
+            $acaoCampanhas->att_painel_campanha($request->tabela);
+            return response()->json(['message' => 'Registro atualizado com sucesso'], 200);
+        } else {
+            return response()->json(['message' => 'Nenhum registro atualizado'], 404);
+        };
     }
 
 }
